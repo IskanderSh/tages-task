@@ -1,0 +1,37 @@
+syntax="proto3";
+
+package file_provider;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/IskanderSh/tages-task/proto";
+
+service FileProvider {
+  rpc UploadFile (stream UploadFileRequest) returns (google.protobuf.Empty);
+  rpc DownloadFile (DownloadFileRequest) returns (stream DownloadFileResponse);
+  rpc FetchFiles (google.protobuf.Empty) returns ()
+}
+
+message File {
+  string filename = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message UploadFileRequest {
+  string filename = 1;
+  bytes content = 2;
+}
+
+message DownloadFileRequest {
+  string filename = 1;
+}
+
+message DownloadFileResponse {
+  bytes content = 1;
+}
+
+message FetchFilesResponse {
+  repeated File data = 1;
+}
