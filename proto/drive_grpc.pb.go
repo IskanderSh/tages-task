@@ -29,7 +29,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FileProviderClient interface {
-	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, emptypb.Empty], error)
+	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse], error)
 	DownloadFile(ctx context.Context, in *DownloadFileRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadFileResponse], error)
 	FetchFiles(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*FetchFilesResponse, error)
 }
@@ -42,18 +42,18 @@ func NewFileProviderClient(cc grpc.ClientConnInterface) FileProviderClient {
 	return &fileProviderClient{cc}
 }
 
-func (c *fileProviderClient) UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, emptypb.Empty], error) {
+func (c *fileProviderClient) UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &FileProvider_ServiceDesc.Streams[0], FileProvider_UploadFile_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[UploadFileRequest, emptypb.Empty]{ClientStream: stream}
+	x := &grpc.GenericClientStream[UploadFileRequest, UploadFileResponse]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FileProvider_UploadFileClient = grpc.ClientStreamingClient[UploadFileRequest, emptypb.Empty]
+type FileProvider_UploadFileClient = grpc.ClientStreamingClient[UploadFileRequest, UploadFileResponse]
 
 func (c *fileProviderClient) DownloadFile(ctx context.Context, in *DownloadFileRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadFileResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -88,7 +88,7 @@ func (c *fileProviderClient) FetchFiles(ctx context.Context, in *emptypb.Empty, 
 // All implementations must embed UnimplementedFileProviderServer
 // for forward compatibility.
 type FileProviderServer interface {
-	UploadFile(grpc.ClientStreamingServer[UploadFileRequest, emptypb.Empty]) error
+	UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error
 	DownloadFile(*DownloadFileRequest, grpc.ServerStreamingServer[DownloadFileResponse]) error
 	FetchFiles(context.Context, *emptypb.Empty) (*FetchFilesResponse, error)
 	mustEmbedUnimplementedFileProviderServer()
@@ -101,7 +101,7 @@ type FileProviderServer interface {
 // pointer dereference when methods are called.
 type UnimplementedFileProviderServer struct{}
 
-func (UnimplementedFileProviderServer) UploadFile(grpc.ClientStreamingServer[UploadFileRequest, emptypb.Empty]) error {
+func (UnimplementedFileProviderServer) UploadFile(grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
 }
 func (UnimplementedFileProviderServer) DownloadFile(*DownloadFileRequest, grpc.ServerStreamingServer[DownloadFileResponse]) error {
@@ -132,11 +132,11 @@ func RegisterFileProviderServer(s grpc.ServiceRegistrar, srv FileProviderServer)
 }
 
 func _FileProvider_UploadFile_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FileProviderServer).UploadFile(&grpc.GenericServerStream[UploadFileRequest, emptypb.Empty]{ServerStream: stream})
+	return srv.(FileProviderServer).UploadFile(&grpc.GenericServerStream[UploadFileRequest, UploadFileResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FileProvider_UploadFileServer = grpc.ClientStreamingServer[UploadFileRequest, emptypb.Empty]
+type FileProvider_UploadFileServer = grpc.ClientStreamingServer[UploadFileRequest, UploadFileResponse]
 
 func _FileProvider_DownloadFile_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(DownloadFileRequest)
