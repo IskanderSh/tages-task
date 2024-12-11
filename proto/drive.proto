@@ -10,7 +10,7 @@ option go_package = "github.com/IskanderSh/tages-task/proto";
 service FileProvider {
   rpc UploadFile (stream UploadFileRequest) returns (google.protobuf.Empty);
   rpc DownloadFile (DownloadFileRequest) returns (stream DownloadFileResponse);
-  rpc FetchFiles (google.protobuf.Empty) returns ()
+  rpc FetchFiles (google.protobuf.Empty) returns (FetchFilesResponse);
 }
 
 message File {
