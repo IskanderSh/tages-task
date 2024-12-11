@@ -1,0 +1,11 @@
+application:
+  host: localhost
+  port: 1111
+fileStorage:
+  directoryName: ./data/
+metaStorage:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  DBName: postgres
