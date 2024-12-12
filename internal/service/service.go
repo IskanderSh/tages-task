@@ -33,12 +33,13 @@ func NewService(
 type FileStorage interface {
 	CreateFile(name string) (path string, err error)
 	SaveFileChunk(name string, data []byte) error
-	CloseFile(name string) error
+	CloseFile(name string)
 }
 
 type MetaStorage interface {
 	GetByName(ctx context.Context, filename string) (*models.MetaInfo, error)
 	Create(ctx context.Context, value models.MetaInfo) error
+	FetchAll(ctx context.Context) (data []models.MetaInfo, err error)
 }
 
 func (s *Service) UploadFile(
@@ -64,8 +65,12 @@ func (s *Service) UploadFile(
 	return name, nil
 }
 
-func (s *Service) FinishUpload(name string) error {
-	return s.fileStorage.CloseFile(name)
+func (s *Service) FinishUpload(name string) {
+	s.fileStorage.CloseFile(name)
+}
+
+func (s *Service) GetFiles(ctx context.Context) ([]models.MetaInfo, error) {
+	return s.metaStorage.FetchAll(ctx)
 }
 
 // CreateNewFile creates file on disk, it will create file with new suffix id,

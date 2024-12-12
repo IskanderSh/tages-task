@@ -57,10 +57,8 @@ func (s *FileStorage) SaveFileChunk(name string, data []byte) error {
 	return nil
 }
 
-func (s *FileStorage) CloseFile(name string) error {
+func (s *FileStorage) CloseFile(name string) {
 	s.mu.Lock()
 	delete(s.openFiles, name)
 	s.mu.Unlock()
-
-	return nil
 }

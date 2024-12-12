@@ -67,3 +67,22 @@ func (s *MetaStorage) Create(ctx context.Context, value models.MetaInfo) error {
 
 	return nil
 }
+
+func (s *MetaStorage) FetchAll(ctx context.Context) (data []models.MetaInfo, err error) {
+	rows, err := s.db.QueryContext(ctx, queryFetchAll)
+	if err != nil {
+		return data, err
+	}
+
+	for rows.Next() {
+		var value models.MetaInfo
+		if err = rows.Scan(&value.ID, &value.FileName, &value.Path, &value.CreatedAt, &value.UpdatedAt); err != nil {
+			s.log.Warn("error scanning values to meta info:", err)
+			continue
+		}
+
+		data = append(data, value)
+	}
+
+	return data, nil
+}

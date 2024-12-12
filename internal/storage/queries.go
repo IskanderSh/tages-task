@@ -12,4 +12,10 @@ LIMIT 1;`
 INSERT INTO file_meta (file_name, path, created_at, updated_at)
 VALUES ($1, $2, $3, $4);
 `
+
+	queryFetchAll = `
+SELECT id, file_name, path, created_at, updated_at
+FROM file_meta
+ORDER BY created_at DESC;
+`
 )

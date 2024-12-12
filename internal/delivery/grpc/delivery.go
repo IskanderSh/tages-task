@@ -29,7 +29,8 @@ func NewHandler(log *slog.Logger, service ServiceProvider) *Handler {
 
 type ServiceProvider interface {
 	UploadFile(ctx context.Context, req models.UploadFileRequest, counter int) (fileName string, err error)
-	FinishUpload(name string) error
+	FinishUpload(name string)
+	GetFiles(ctx context.Context) ([]models.MetaInfo, error)
 }
 
 func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
@@ -41,26 +42,26 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
-			closeErr := h.service.FinishUpload(name)
-			if closeErr != nil {
-				h.log.Error("error closing file after upload finish:", closeErr)
-			}
+			h.service.FinishUpload(name)
 
 			return stream.SendAndClose(&pb.UploadFileResponse{
 				FileName: name,
 			})
 		}
 		if err != nil {
+			h.log.Error(err.Error())
 			return status.Error(codes.InvalidArgument, fmt.Sprintf("%s: %v", errorlist.ErrInvalidValues, err))
 		}
 
 		uploadFileReq := models.FromProtoToDomain(req)
+		// set saved file name
 		if name != "" {
 			uploadFileReq.FileName = name
 		}
 
 		name, err = h.service.UploadFile(context.Background(), *uploadFileReq, counter)
 		if err != nil {
+			h.log.Error(err.Error())
 			return status.Error(codes.Internal, err.Error())
 		}
 
@@ -73,5 +74,18 @@ func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvid
 }
 
 func (h *Handler) FetchFiles(ctx context.Context, empty *emptypb.Empty) (*pb.FetchFilesResponse, error) {
-	return nil, nil
+	values, err := h.service.GetFiles(ctx)
+	if err != nil {
+		h.log.Error(err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	list := make([]*pb.File, 0, len(values))
+	for _, value := range values {
+		list = append(list, value.ToProto())
+	}
+
+	return &pb.FetchFilesResponse{
+		Data: list,
+	}, nil
 }

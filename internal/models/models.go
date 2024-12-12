@@ -4,6 +4,7 @@ import (
 	"time"
 
 	pb "github.com/IskanderSh/tages-task/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type MetaInfo struct {
@@ -12,6 +13,14 @@ type MetaInfo struct {
 	Path      string    `json:"path"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (m *MetaInfo) ToProto() *pb.File {
+	return &pb.File{
+		FileName:  m.FileName,
+		CreatedAt: timestamppb.New(m.CreatedAt),
+		UpdatedAt: timestamppb.New(m.UpdatedAt),
+	}
 }
 
 type UploadFileRequest struct {
@@ -24,4 +33,11 @@ func FromProtoToDomain(req *pb.UploadFileRequest) *UploadFileRequest {
 		FileName: req.FileName,
 		Content:  req.Content,
 	}
+}
+
+type FetchFilesResponse struct {
+	ID        int64
+	FileName  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
