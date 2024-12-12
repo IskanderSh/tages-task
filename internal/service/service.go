@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/IskanderSh/tages-task/internal/models"
 	"github.com/IskanderSh/tages-task/pkg/errorlist"
@@ -45,12 +46,13 @@ func (s *Service) UploadFile(
 	req models.UploadFileRequest,
 	counter int,
 ) (fileName string, err error) {
-	name := fileName
+	name := req.FileName
 
 	// need to create new file, if this is first chunk of gRPC stream
 	if counter == 0 {
 		name, err = s.createNewFile(ctx, req.FileName)
 		if err != nil {
+			s.log.Error(err.Error())
 			return "", err
 		}
 	}
@@ -72,26 +74,29 @@ func (s *Service) createNewFile(ctx context.Context, fileName string) (newName s
 	var name = fileName
 
 	metaInfo, err := s.metaStorage.GetByName(ctx, fileName)
+	s.log.Info("metaInfo:", metaInfo)
 	if err != nil && !errors.Is(err, errorlist.ErrNotFound) {
 		return "", err
 	}
 
 	// if file with such name is already exists, create file with suffix
 	if metaInfo != nil {
-		lastAddedID, found := utils.UniqueIDFromFileName(metaInfo.FileName)
-		if found {
-			name = fmt.Sprintf("%s (%d)", name, lastAddedID)
-		}
+		lastAddedID := utils.UniqueIDFromFileName(metaInfo.FileName)
+		name = fmt.Sprintf("%s (%d)", name, lastAddedID+1)
 	}
 
-	path, err := s.fileStorage.CreateFile(metaInfo.FileName)
+	path, err := s.fileStorage.CreateFile(name)
 	if err != nil {
 		return "", err
 	}
 
 	// set new name and path for new file
-	metaInfo.FileName = name
-	metaInfo.Path = path
+	metaInfo = &models.MetaInfo{
+		FileName:  name,
+		Path:      path,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 
 	// save meta info for new file
 	if err = s.metaStorage.Create(ctx, *metaInfo); err != nil {

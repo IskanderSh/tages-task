@@ -63,6 +63,8 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 		if err != nil {
 			return status.Error(codes.Internal, err.Error())
 		}
+
+		counter++
 	}
 }
 

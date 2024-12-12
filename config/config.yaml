@@ -2,7 +2,7 @@ application:
   host: localhost
   port: 1111
 fileStorage:
-  directoryName: ./data/
+  directoryName: ./data
 metaStorage:
   host: localhost
   port: 5432

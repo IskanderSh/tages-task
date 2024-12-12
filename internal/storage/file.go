@@ -1,9 +1,9 @@
 package storage
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/IskanderSh/tages-task/pkg/errorlist"
@@ -26,8 +26,8 @@ func NewFileStorage(log *slog.Logger, dirName string) *FileStorage {
 }
 
 func (s *FileStorage) CreateFile(name string) (path string, err error) {
-	path = filepath.Join(s.dirName, name)
-	s.log.Debug("creating file with path: ", path)
+	path = fmt.Sprintf("%s/%s", s.dirName, name)
+	s.log.Info("file with path:", path)
 
 	file, err := os.Create(path)
 	if err != nil {
@@ -59,11 +59,8 @@ func (s *FileStorage) SaveFileChunk(name string, data []byte) error {
 
 func (s *FileStorage) CloseFile(name string) error {
 	s.mu.Lock()
-	file, exists := s.openFiles[name]
-	if !exists {
-		return errorlist.ErrNoFileWithSuchName
-	}
+	delete(s.openFiles, name)
 	s.mu.Unlock()
 
-	return file.Close()
+	return nil
 }

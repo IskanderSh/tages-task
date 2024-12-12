@@ -1,9 +1,8 @@
-module github.com.com/Iskandersh/tages-task
+module github.com/IskanderSh/tages-task
 
 go 1.23.4
 
 require (
-	github.com/IskanderSh/tages-task v1.0.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9

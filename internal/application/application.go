@@ -29,6 +29,7 @@ func NewApplication(log *slog.Logger, cfg *config.Config) (*Application, error) 
 
 	// services
 	srv := service.NewService(log, fileStorage, metaStorage)
+	fmt.Printf("srv: %+v", srv)
 
 	// handlers
 	handler := delivery.NewHandler(log, srv)

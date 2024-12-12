@@ -40,7 +40,9 @@ func NewMetaStorage(log *slog.Logger, cfg config.MetaStorage) (*MetaStorage, err
 
 func (s *MetaStorage) GetByName(ctx context.Context, filename string) (*models.MetaInfo, error) {
 	var result models.MetaInfo
-	if err := s.db.QueryRowContext(ctx, queryGetByID, filename).Scan(&result); err != nil {
+	err := s.db.QueryRowContext(ctx, queryGetByID, filename).
+		Scan(&result.ID, &result.FileName, &result.Path, &result.CreatedAt, &result.UpdatedAt)
+	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errorlist.ErrNotFound
 		}
