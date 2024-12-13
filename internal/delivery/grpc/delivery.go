@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 
+	"github.com/IskanderSh/tages-task/config"
 	"github.com/IskanderSh/tages-task/internal/models"
 	"github.com/IskanderSh/tages-task/pkg/errorlist"
 	pb "github.com/IskanderSh/tages-task/proto"
@@ -16,6 +17,7 @@ import (
 
 type Handler struct {
 	pb.UnimplementedFileProviderServer
+	cfg     *config.Config
 	log     *slog.Logger
 	service ServiceProvider
 }
@@ -71,7 +73,7 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 }
 
 func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvider_DownloadFileServer) error {
-	buffer := make([]byte, 1024*1024)
+	buffer := make([]byte, h.cfg.ChunkSize)
 	counter := 0
 
 	for {

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -99,8 +98,7 @@ func (s *Service) createNewFile(ctx context.Context, fileName string) (newName s
 
 	// if file with such name is already exists, create file with suffix
 	if metaInfo != nil {
-		lastAddedID := utils.UniqueIDFromFileName(metaInfo.FileName)
-		name = fmt.Sprintf("%s (%d)", name, lastAddedID+1)
+		name = s.nextUniqueFileName(metaInfo.FileName)
 	}
 
 	path, err := s.fileStorage.CreateFile(name)
@@ -122,4 +120,16 @@ func (s *Service) createNewFile(ctx context.Context, fileName string) (newName s
 	}
 
 	return name, nil
+}
+
+func (s *Service) nextUniqueFileName(name string) string {
+	nextName := utils.NextUniqueName(name)
+	// service has file with same name, but couldn't define new unique id for file
+	if nextName == name {
+		s.log.Warn("error defining name for new file with existing name: ", name)
+	}
+
+	s.log.Info("getting new file name for last one", nextName, name)
+
+	return nextName
 }

@@ -1,36 +1,63 @@
 package utils
 
 import (
-	"log"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
-// UniqueIDFromFileName gets id from file name,
+// NextUniqueName gets next unique name from file name,
 // if while adding, file with such name was added before.
-// test_file.txt (2) tells, that this is third file with name "test_file.txt"
-// result of this function will be: 2
-// if file doesn't have such id, function will return 0
-func UniqueIDFromFileName(fileName string) int {
+// test_file (2).txt tells, that this is third file with name "test_file.txt"
+// result of this function will be: test_file (3).txt
+// if file doesn't have such id, function will return new name with id = 1
+func NextUniqueName(fileName string) string {
 	values := strings.Split(fileName, " ")
-
-	suffixValue := values[len(values)-1] // last value
-
-	suffixWithoutPrefix, found := strings.CutPrefix(suffixValue, "(")
-	if !found { // tells that this name doesn't have suffix like (n)
-		return 0
+	if len(values) < 1 {
+		return generateWithNonExistingID(fileName)
 	}
 
-	suffix, found := strings.CutSuffix(suffixWithoutPrefix, ")")
+	suffixValue := values[len(values)-1] // last value: test_file (2).txt -> (2).txt
+	fmt.Println(suffixValue)
+
+	withoutFormatValues := strings.Split(suffixValue, ".") // (2).txt -> [(2), txt]
+	if len(withoutFormatValues) < 2 {
+		return generateWithNonExistingID(fileName)
+	}
+
+	uniqueID := withoutFormatValues[0] // [(2), txt] -> (2)
+	fmt.Println(uniqueID)
+
+	uniqueIDWithoutPrefix, found := strings.CutPrefix(uniqueID, "(") // (2) -> 2)
+	if !found {                                                      // tells that this name doesn't have suffix like (n)
+		return generateWithNonExistingID(fileName)
+	}
+
+	nowUniqueIDString, found := strings.CutSuffix(uniqueIDWithoutPrefix, ")") // 2) -> 2
 	if !found {
-		return 0
+		return generateWithNonExistingID(fileName)
 	}
 
-	id, err := strconv.Atoi(suffix)
+	nowUniqueID, err := strconv.Atoi(nowUniqueIDString)
 	if err != nil {
-		log.Printf("error convertins suffix to integer: %v", err)
-		return 0
+		return generateWithNonExistingID(fileName)
 	}
 
-	return id
+	fmt.Println(nowUniqueID)
+
+	nextUniqueName := fmt.Sprintf(
+		"%s (%d).%s",
+		strings.Join(values[:len(values)-1], " "),
+		nowUniqueID+1,
+		strings.Join(withoutFormatValues[1:], "."),
+	)
+
+	return nextUniqueName
+}
+
+func generateWithNonExistingID(name string) string {
+	values := strings.Split(name, ".")               // test.txt -> [test, txt]
+	values[0] = fmt.Sprintf("%s (%d)", values[0], 1) // [test, txt] -> [test (1), txt]
+
+	return strings.Join(values, ".") // [test (1), txt] -> test (1).txt
 }

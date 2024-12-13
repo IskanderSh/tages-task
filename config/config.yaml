@@ -9,3 +9,4 @@ metaStorage:
   user: postgres
   password: postgres
   DBName: postgres
+chunkSize: 1048576

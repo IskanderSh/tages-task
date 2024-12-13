@@ -74,6 +74,11 @@ func (s *FileStorage) OpenFile(name string) error {
 	path := fmt.Sprintf("%s/%s", s.dirName, name)
 	s.log.Info("file with path:", path)
 
+	_, err := os.Stat(path)
+	if err != nil {
+		return errorlist.ErrNoFileWithSuchName
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
 		return err

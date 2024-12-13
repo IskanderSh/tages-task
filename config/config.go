@@ -13,6 +13,7 @@ type Config struct {
 	Application Application `yaml:"application"`
 	FileStorage FileStorage `yaml:"fileStorage"`
 	MetaStorage MetaStorage `yaml:"metaStorage"`
+	ChunkSize   int         `yaml:"chunkSize"` // bytes
 }
 
 type Application struct {
