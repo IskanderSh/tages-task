@@ -2,6 +2,7 @@
 
 ## Information about service:
 - Service is storing files on disk, foler ./data/
+- If you will send file with the same name, service will store him with other name(test.txt -> test (1).txt)
 - For calling each function you should use gRPC
 - Service is storing file's meta info in postgreSQL
 
