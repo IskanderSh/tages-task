@@ -57,8 +57,29 @@ func (s *FileStorage) SaveFileChunk(name string, data []byte) error {
 	return nil
 }
 
-func (s *FileStorage) CloseFile(name string) {
+func (s *FileStorage) CloseFile(name string) error {
 	s.mu.Lock()
+	value, exists := s.openFiles[name]
+	if !exists {
+		return errorlist.ErrNoFileWithSuchName
+	}
+
 	delete(s.openFiles, name)
 	s.mu.Unlock()
+
+	return value.Close()
+}
+
+func (s *FileStorage) ReadFileChunk(name string, buffer []byte) (bytesRead int, err error) {
+	file, exists := s.openFiles[name]
+	if !exists {
+		return bytesRead, errorlist.ErrNoFileWithSuchName
+	}
+
+	bytesRead, err = file.Read(buffer)
+	if err != nil {
+		return bytesRead, err
+	}
+
+	return bytesRead, nil
 }

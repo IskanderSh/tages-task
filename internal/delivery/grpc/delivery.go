@@ -29,8 +29,9 @@ func NewHandler(log *slog.Logger, service ServiceProvider) *Handler {
 
 type ServiceProvider interface {
 	UploadFile(ctx context.Context, req models.UploadFileRequest, counter int) (fileName string, err error)
-	FinishUpload(name string)
+	FinishUpload(name string) error
 	GetFiles(ctx context.Context) ([]models.MetaInfo, error)
+	DownloadFile(ctx context.Context, name string, buffer []byte) (bytesRead int, err error)
 }
 
 func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
@@ -42,7 +43,7 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
-			h.service.FinishUpload(name)
+			h.MustClose(name)
 
 			return stream.SendAndClose(&pb.UploadFileResponse{
 				FileName: name,
@@ -70,6 +71,29 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 }
 
 func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvider_DownloadFileServer) error {
+	buffer := make([]byte, 1024*1024)
+	for {
+		bytesRead, err := h.service.DownloadFile(stream.Context(), req.FileName, buffer)
+		if err != nil {
+			if err == io.EOF {
+				h.MustClose(req.FileName)
+				break
+			}
+
+			h.log.Error("error downloading file: ", err)
+			return status.Error(codes.Internal, err.Error())
+		}
+
+		err = stream.Send(&pb.DownloadFileResponse{
+			Content: buffer[:bytesRead],
+		})
+		if err != nil {
+			h.log.Error("error sending chunk to client: ", err)
+			return status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	h.log.Info("stream sending is ended successfully")
 	return nil
 }
 
@@ -88,4 +112,10 @@ func (h *Handler) FetchFiles(ctx context.Context, empty *emptypb.Empty) (*pb.Fet
 	return &pb.FetchFilesResponse{
 		Data: list,
 	}, nil
+}
+
+func (h *Handler) MustClose(name string) {
+	if err := h.service.FinishUpload(name); err != nil {
+		h.log.Error("error closing file: ", err)
+	}
 }

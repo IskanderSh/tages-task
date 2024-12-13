@@ -33,7 +33,8 @@ func NewService(
 type FileStorage interface {
 	CreateFile(name string) (path string, err error)
 	SaveFileChunk(name string, data []byte) error
-	CloseFile(name string)
+	CloseFile(name string) error
+	ReadFileChunk(name string, buffer []byte) (bytesRead int, err error)
 }
 
 type MetaStorage interface {
@@ -65,8 +66,12 @@ func (s *Service) UploadFile(
 	return name, nil
 }
 
-func (s *Service) FinishUpload(name string) {
-	s.fileStorage.CloseFile(name)
+func (s *Service) FinishUpload(name string) error {
+	return s.fileStorage.CloseFile(name)
+}
+
+func (s *Service) DownloadFile(ctx context.Context, name string, buffer []byte) (bytesRead int, err error) {
+	return s.fileStorage.ReadFileChunk(name, buffer)
 }
 
 func (s *Service) GetFiles(ctx context.Context) ([]models.MetaInfo, error) {
