@@ -10,6 +10,7 @@
 - Clone the repository: ```git clone https://github.com/IskanderSh/tages-task.git```
 - Start containers and check if they are running: ```docker-compose up -d```
 - Make migrations for your postgres which are stored here: ./migrations/
+- Set configs in your own way in ./config/config.yaml
 - Run the service: ```make run```
 
 ## How to iterate with service:
