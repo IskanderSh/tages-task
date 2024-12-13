@@ -35,6 +35,7 @@ type FileStorage interface {
 	SaveFileChunk(name string, data []byte) error
 	CloseFile(name string) error
 	ReadFileChunk(name string, buffer []byte) (bytesRead int, err error)
+	OpenFile(name string) error
 }
 
 type MetaStorage interface {
@@ -70,7 +71,14 @@ func (s *Service) FinishUpload(name string) error {
 	return s.fileStorage.CloseFile(name)
 }
 
-func (s *Service) DownloadFile(ctx context.Context, name string, buffer []byte) (bytesRead int, err error) {
+func (s *Service) DownloadFile(name string, counter int, buffer []byte) (bytesRead int, err error) {
+	// open file if it is first chunk
+	if counter == 0 {
+		if err = s.fileStorage.OpenFile(name); err != nil {
+			return bytesRead, err
+		}
+	}
+
 	return s.fileStorage.ReadFileChunk(name, buffer)
 }
 

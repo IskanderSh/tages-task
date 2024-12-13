@@ -31,7 +31,7 @@ type ServiceProvider interface {
 	UploadFile(ctx context.Context, req models.UploadFileRequest, counter int) (fileName string, err error)
 	FinishUpload(name string) error
 	GetFiles(ctx context.Context) ([]models.MetaInfo, error)
-	DownloadFile(ctx context.Context, name string, buffer []byte) (bytesRead int, err error)
+	DownloadFile(name string, counter int, buffer []byte) (bytesRead int, err error)
 }
 
 func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
@@ -72,8 +72,12 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 
 func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvider_DownloadFileServer) error {
 	buffer := make([]byte, 1024*1024)
+	counter := 0
+
 	for {
-		bytesRead, err := h.service.DownloadFile(stream.Context(), req.FileName, buffer)
+		// DownloadFile is writing values into buffer, this is not go way,
+		// but it helps to not initialize new slice every function call
+		bytesRead, err := h.service.DownloadFile(req.FileName, counter, buffer)
 		if err != nil {
 			if err == io.EOF {
 				h.MustClose(req.FileName)
@@ -91,6 +95,8 @@ func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvid
 			h.log.Error("error sending chunk to client: ", err)
 			return status.Error(codes.Internal, err.Error())
 		}
+
+		counter++
 	}
 
 	h.log.Info("stream sending is ended successfully")

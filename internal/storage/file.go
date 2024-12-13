@@ -70,6 +70,22 @@ func (s *FileStorage) CloseFile(name string) error {
 	return value.Close()
 }
 
+func (s *FileStorage) OpenFile(name string) error {
+	path := fmt.Sprintf("%s/%s", s.dirName, name)
+	s.log.Info("file with path:", path)
+
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	s.mu.Lock()
+	s.openFiles[name] = file
+	s.mu.Unlock()
+
+	return nil
+}
+
 func (s *FileStorage) ReadFileChunk(name string, buffer []byte) (bytesRead int, err error) {
 	file, exists := s.openFiles[name]
 	if !exists {
