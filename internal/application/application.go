@@ -32,7 +32,7 @@ func NewApplication(log *slog.Logger, cfg *config.Config) (*Application, error) 
 	fmt.Printf("srv: %+v", srv)
 
 	// handlers
-	handler := delivery.NewHandler(log, srv)
+	handler := delivery.NewHandler(cfg, log, srv)
 
 	// server
 	grpcServer := grpc.NewServer()

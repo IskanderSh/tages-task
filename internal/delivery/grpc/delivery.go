@@ -17,15 +17,20 @@ import (
 
 type Handler struct {
 	pb.UnimplementedFileProviderServer
-	cfg     *config.Config
-	log     *slog.Logger
-	service ServiceProvider
+	cfg            *config.Config
+	log            *slog.Logger
+	service        ServiceProvider
+	loadSemaphore  chan struct{}
+	fetchSemaphore chan struct{}
 }
 
-func NewHandler(log *slog.Logger, service ServiceProvider) *Handler {
+func NewHandler(cfg *config.Config, log *slog.Logger, service ServiceProvider) *Handler {
 	return &Handler{
-		log:     log,
-		service: service,
+		cfg:            cfg,
+		log:            log,
+		service:        service,
+		loadSemaphore:  make(chan struct{}, cfg.LoadWorkersCnt),
+		fetchSemaphore: make(chan struct{}, cfg.FetchWorkersCnt),
 	}
 }
 
@@ -37,6 +42,11 @@ type ServiceProvider interface {
 }
 
 func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
+	h.loadSemaphore <- struct{}{}
+	defer func() {
+		<-h.loadSemaphore
+	}()
+
 	var (
 		name    string
 		counter int
@@ -73,6 +83,11 @@ func (h *Handler) UploadFile(stream pb.FileProvider_UploadFileServer) error {
 }
 
 func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvider_DownloadFileServer) error {
+	h.loadSemaphore <- struct{}{}
+	defer func() {
+		<-h.loadSemaphore
+	}()
+
 	buffer := make([]byte, h.cfg.ChunkSize)
 	counter := 0
 
@@ -106,6 +121,11 @@ func (h *Handler) DownloadFile(req *pb.DownloadFileRequest, stream pb.FileProvid
 }
 
 func (h *Handler) FetchFiles(ctx context.Context, empty *emptypb.Empty) (*pb.FetchFilesResponse, error) {
+	h.fetchSemaphore <- struct{}{}
+	defer func() {
+		<-h.fetchSemaphore
+	}()
+
 	values, err := h.service.GetFiles(ctx)
 	if err != nil {
 		h.log.Error(err.Error())

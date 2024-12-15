@@ -10,10 +10,12 @@ import (
 const defaultPath = "./config/config.yaml"
 
 type Config struct {
-	Application Application `yaml:"application"`
-	FileStorage FileStorage `yaml:"fileStorage"`
-	MetaStorage MetaStorage `yaml:"metaStorage"`
-	ChunkSize   int         `yaml:"chunkSize"` // bytes
+	Application     Application `yaml:"application"`
+	FileStorage     FileStorage `yaml:"fileStorage"`
+	MetaStorage     MetaStorage `yaml:"metaStorage"`
+	ChunkSize       int         `yaml:"chunkSize"` // bytes
+	LoadWorkersCnt  int         `yaml:"loadWorkersCnt"`
+	FetchWorkersCnt int         `yaml:"FetchWorkersCnt"`
 }
 
 type Application struct {

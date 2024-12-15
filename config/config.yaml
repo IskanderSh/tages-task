@@ -10,3 +10,5 @@ metaStorage:
   password: postgres
   DBName: postgres
 chunkSize: 1048576
+loadWorkersCnt: 10
+fetchWorkersCnt: 100
